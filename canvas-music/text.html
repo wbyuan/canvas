@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            border: 0;
+            box-sizing: border-box;
+            list-style: none;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #170b33
+        }
+
+        .btn-control {
+            width: 80px;
+            height: 42px;
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id='canvas'></canvas>
+    <script>
+        window.onload = function () {
+            var canvas = document.querySelector('#canvas')
+            var width = canvas.width = document.body.clientWidth || window.innerWidth
+            var height = canvas.height = document.body.clientHeight || window.innerHeight
+            var ctx = canvas.getContext("2d");
+            // var z = 0
+            //     var x = 0
+            //     var y = height / 2
+            // function heighten() {
+            //     if (y > z) {
+            //         y -= 1
+            //         ctx.fillStyle = 'red'
+            //         ctx.fillRect(0, y, 10, y)
+            //     }
+            //     requestAnimationFrame(heighten)
+            // }
+
+
+            var points = []
+            var pointW = 2
+            var pointGap = 8
+            var length = width / pointW + pointGap
+            function getPointData() {
+                for (var i = 0; i < length; i++) {
+                    let x = i * (pointW + pointGap),
+                        y = Math.ceil(Math.random() * 100);
+                    points.push([x, y])
+                }
+            }
+            setInterval(() => {
+                getPointData()
+                draw()
+            }, 2000)
+            function draw() {
+                ctx.clearRect(0, 0, width, height)
+                var dx = 0
+                points.forEach((item, index) => {
+                    dx = index * 10
+                    if ((dx > 300) && (dx < width - 300)) {
+
+                        var dy = 0 //y坐标和高度增长量
+                        function heighten() {
+                            if (dy < item[1]) {
+                                dy++
+                                pointH = dy
+                                y = height / 2 - dy
+                                var gd = ctx.createLinearGradient(item[0], height / 2, item[0], height / 2 - item[1])
+                                gd.addColorStop("0", "#7034fe");
+                                gd.addColorStop("0.5", "#2c028f");
+                                gd.addColorStop("1", "#13013d");
+                                ctx.fillStyle = gd
+                                ctx.fillRect(item[0], y, pointW, pointH)
+                                ctx.save();
+                                ctx.translate(canvas.width / 2, canvas.height / 2);
+                                ctx.rotate(Math.PI * 2);//旋转180°
+                                ctx.beginPath()
+                                var gh = ctx.createLinearGradient(item[0] - width / 2, item[1], item[0] - width / 2, 0)
+                                gh.addColorStop("0", "#13013d");
+                                gh.addColorStop("0.5", "#2c028f");
+                                gh.addColorStop("1", "#7034fe");
+                                ctx.fillStyle = gh
+                                ctx.fillRect(item[0] - width / 2, 0, pointW, pointH)
+                                ctx.restore();
+                            }
+                            requestAnimationFrame(heighten)
+                        }
+                        heighten()
+
+                    }
+
+                });
+
+                points.length = 0
+                //requestAnimationFrame(draw)
+            }
+
+        }
+    </script>
+</body>
+
+</html>

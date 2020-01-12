@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>音乐</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            border: 0;
+            box-sizing: border-box;
+            list-style: none;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #170b33
+        }
+
+        .btn-control {
+            width: 80px;
+            height: 42px;
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+
+        .btn-control>button {
+            width: 60px;
+            height: 60px;
+            line-height: 60px;
+            text-align: center;
+            border-radius: 50%;
+            background: #D94240;
+            color: #fff;
+            font-size: 18px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .btn-control>button::after {
+            content: "";
+            width: 0;
+            height: 0;
+            border-width: 14px;
+            border-style: solid;
+            border-color: transparent transparent transparent #fff;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            margin-top: -11px;
+            margin-left: -4px;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="canvas"></canvas>
+    <div class="btn-control">
+        <button type="button" class="btnPlay"></button>
+        <input type="file" id="uploadedFile"></input>
+    </div>
+    <script>
+        window.onload = function () {
+            var canvas = document.querySelector('#canvas')
+            var width = canvas.width = window.innerWidth
+            var height = canvas.height = window.innerHeight
+            var ctx = canvas.getContext("2d");
+            var btnPlay = document.querySelector('.btnPlay')
+            var Visualizer = function (element) {
+                this.file = null; //要处理的文件，后面会讲解如何获取文件
+                this.fileName = null; //要处理的文件的名，文件名
+                this.audioContext = null; //进行音频处理的上下文，稍后会进行初始化
+                this.source = null //保存音频
+                this.audioInput = document.querySelector(element)
+                this.aduioArr = []
+                this._init()
+            }
+
+
+            Visualizer.prototype = {
+                _init: function () {
+                    window.AudioContext = window.AudioContext || window.webkitAudioContext || window.mozAudioContext || window.msAudioContext;
+                    //安全地实例化一个AudioContext并赋值到Visualizer的audioContext属性上，方便后面处理音频使用
+                    try {
+                        this.audioContext = window.AudioContext ? new AudioContext() : '';
+                    } catch (e) {
+                        console.log('!妳的浏览器不支持AudioContext:(');
+                        console.log(e);
+                    }
+                    this._addEventListner()
+                },
+                _addEventListner: function () {
+                    var that = this
+                    //监听是否有文件被选中
+                    this.audioInput.addEventListener('change', function () {
+                        //这里判断一下文件长度可以确定用户是否真的选择了文件，如果点了取消则文件长度为0
+                        if (that.audioInput.files.length !== 0) {
+                            that.file = that.audioInput.files[0]; //获取选中文件
+                            that.fileName = that.file.name;
+                            that._start();
+                        };
+                    })
+                },
+                //实例化一个FileReader来将文件读取为ArrayBuffer格式
+                _start: function () {
+                    var that = this,
+                        fr = new FileReader(); //实例化一个FileReader用于读取文件
+                    fr.onload = function (e) { //文件读取完后调用此函数
+                        var fileResult = e.target.result; //这是读取成功得到的结果ArrayBuffer数据
+                        //从Visualizer得到最开始实例化的AudioContext用来做解码ArrayBuffer ,解码成功则调用此函数，参数buffer为解码后得到的结果
+                        that.audioContext.decodeAudioData(fileResult, function (buffer) {
+                            //调用_visualize进行下一步处理，此方法在后面定义并实现
+                            that._visualize(that.audioContext, buffer);
+
+                        }, function (e) {
+                            //解码失败
+                            console.log("!哎玛，文件解码失败:(");
+                        });
+                    };
+                    //将上一步获取的文件传递给FileReader从而将其读取为ArrayBuffer格式
+                    fr.readAsArrayBuffer(this.file);
+                },
+                _visualize: function (audioContext, buffer) {
+                    var audioBufferSouceNode = audioContext.createBufferSource(),
+                        analyser = audioContext.createAnalyser();
+                    //将source与分析器连接
+                    audioBufferSouceNode.connect(analyser);
+                    //将分析器与destination连接，这样才能形成到达扬声器的通路
+                    analyser.connect(audioContext.destination);
+                    //将上一步解码得到的buffer数据赋值给source
+                    audioBufferSouceNode.buffer = buffer;
+                    //播放
+                    audioBufferSouceNode.start(0);
+                    //音乐响起后，把analyser传递到另一个方法开始绘制频谱图了，因为绘图需要的信息要从analyser里面获取
+                    this._drawSpectrum(analyser);
+                },
+                _drawSpectrum(analyser) {
+                    var meterWidth = 10 //能量条宽度
+                    var gap = 20 //能量条间距
+                    var meterNum = width / (meterWidth + gap) //能量条数量
+
+                    ctx.clearRect(0, 0, width, height);
+                    var drawMeter = function () {
+                        var array = new Uint8Array(analyser.frequencyBinCount);
+                        ctx.fillStyle = '#785d8a'
+                        analyser.getByteFrequencyData(array);
+                        var x = 0;
+                        for (var i = 0; i < meterNum; i++) {
+                            var step = Math.round(array.length / meterNum); //计算从analyser中的采样步长
+                            var value = array[i*step];
+                            ctx.fillRect(x, height/2 - value / 2, meterWidth, value / 2);
+                            x += meterWidth + gap
+                        }
+                        requestAnimationFrame(drawMeter);
+                    }
+                    drawMeter()
+                }
+            }
+            new Visualizer('#uploadedFile')
+        }
+
+    </script>
+</body>
+
+</html>

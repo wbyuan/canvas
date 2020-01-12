@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="js/jquery/dist/jquery.js"></script>
+    <style>
+        * {
+            border: 0;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            text-decoration: none;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+
+        .bg {
+            background: url("./image/320115.jpg") center bottom;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bg">
+        <canvas id="cas-line"></canvas>
+    </div>
+
+</body>
+<script>
+    $(function () {
+        //var ctx = $("#cas-line").getContext("2d");
+        var canvas = document.getElementById("cas-line");
+        var ctx = canvas.getContext("2d");
+
+        function resize() {
+            canvas.width = window.innerWidth || window.document.documentElement.innerWidth || document.body.clientWidth
+            canvas.height = window.innerHeight || window.document.documentElement.innerHeight || document.body.clientHeight
+        }
+        resize()
+        window.resize = function () {
+            resize()
+        }
+            //最平滑动画的最佳循环间隔是1000ms/60
+            (function () {
+                var lastTime = 0;
+                var vendors = ['ms', 'moz', 'webkit', 'o'];
+                for (var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
+                    window.requestAnimationFrame = window[vendors[x] + 'RequestAnimationFrame'];
+                    window.cancelAnimationFrame = window[vendors[x] + 'CancelAnimationFrame'] || window[vendors[x] + 'CancelRequestAnimationFrame'];
+                }
+
+                if (!window.requestAnimationFrame)
+                    window.requestAnimationFrame = function (callback, element) {
+                        var currTime = new Date().getTime();
+                        var timeToCall = Math.max(0, 16 - (currTime - lastTime));
+                        var id = window.setTimeout(function () { callback(currTime + timeToCall); },
+                            timeToCall);
+                        lastTime = currTime + timeToCall;
+                        return id;
+                    };
+
+                if (!window.cancelAnimationFrame)
+                    window.cancelAnimationFrame = function (id) {
+                        clearTimeout(id);
+                    };
+            }());
+        var mdot = { x: null, y: null, max: 20000 }
+        window.onmousemove = function (e) {
+            var e = e || window.event
+            mdot.x = e.clientX
+            mdot.y = e.clientY
+        }
+        window.onmouseout = function (e) {
+            mdot.x = null
+            mdot.y = null
+        }   
+        // 添加粒子 x，y为粒子坐标，xa, ya为粒子x、y轴加速度，max为连线的最大距离
+        var dots = []
+        for (var i = 0; i < 150; i++) {
+            var x = Math.random() * canvas.width
+            var y = Math.random() * canvas.height
+            var xa = Math.random() * 2 - 1;
+            var ya = Math.random() * 2 - 1;
+            var alpha = 0.1 + Math.random() * 0.3;
+            var radius = 0.5;
+            var max = 6000;
+            dots.push({
+                x:x,
+                y:y,
+                xa:xa,
+                ya:ya,
+                max: max,
+                alpha:alpha,
+                radius: radius
+            })
+        }
+        
+        function drawFrame() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            var ndots = [mdot].concat(dots);
+            //var img = new Image()
+            //img.src = "./image/320115.jpg"
+            //var img = document.getElementById("img")
+            //img.onload =function(){
+            /// ctx.drawImage(img,0,0,canvas.width,canvas.height)
+            //}
+            ndots.forEach(function (dot) {
+                // 粒子位移
+                dot.x += dot.xa;
+                dot.y += dot.ya;
+                // 遇到边界将加速度反向
+                dot.xa *= (dot.x > canvas.width || dot.x < 0) ? -1 : 1;
+                dot.ya *= (dot.y > canvas.height || dot.y < 0) ? -1 : 1;
+
+                //绘制点
+                ctx.beginPath();
+                ctx.strokeStyle = "#fff"
+                ctx.arc(dot.x, dot.y, dot.radius, 0, Math.PI * 2, true);
+                //ctx.fillStyle = 'rgba(255,255,255,'+ dot.alpha+')';
+                ctx.stroke();
+                // 循环比对粒子间的距离
+                for (var i = 0; i < ndots.length; i++) {
+                    var cdot = ndots[i];
+                    if (dot === cdot || cdot.x === null || cdot.y === null) continue;
+
+                    // 两个粒子之间的距离比
+                    var dx = dot.x - cdot.x,
+                        dy = dot.y - cdot.y;
+                    var dis = dx * dx + dy * dy;
+
+                    // 如果两个粒子之间的距离小于粒子对象的max值，则在两个粒子间画线
+                    if (dis < dot.max) {
+                        // 如果是鼠标，则让粒子向鼠标的位置移动
+                        if (cdot === mdot && dis > (cdot.max / 2)) {
+                            dot.x -= dx * 0.02;
+                            dot.y -= dy * 0.02;
+                        }
+                        //画线
+                        var ratio = (dot.max - dis) / dot.max
+                        ctx.beginPath();
+                        ctx.lineWidth = ratio / 2;
+                        ctx.strokeStyle = 'rgba(255,2552,255,' + (dis + 0.2) + ')';
+                        ctx.moveTo(dot.x, dot.y);
+                        ctx.lineTo(cdot.x, cdot.y);
+                        ctx.stroke();
+                    }
+                    // 将已经计算过的粒子从数组中删除
+                    //dots.splice(dots.indexOf(dot), 1);
+                }
+            })
+            requestAnimationFrame(drawFrame)
+        }
+        requestAnimationFrame(drawFrame)
+    })
+</script>
+
+</html>

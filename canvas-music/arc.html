@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            border: 0;
+            box-sizing: border-box;
+            list-style: none;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: url(./image/325735.jpg)
+        }
+
+        .btn-control {
+            width: 80px;
+            height: 42px;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+        }
+
+        .btn-control>button {
+            width: 80px;
+            height: 42px;
+            line-height: 42px;
+            text-align: center;
+            border-radius: 8px;
+            background: #ffffff;
+            color: red;
+            font-size: 18px;
+            cursor: pointer;
+            margin-top: 100px;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="wrap"></canvas>
+    <div class="btn-control">
+        <audio id="music" crossOrigin='anonymous' src="http://media.mizuiren.com/cz.mp3" controls="controls">
+    </div>
+
+    <script>
+        window.onload = function () {
+            var wrap = document.querySelector('#wrap')
+            var width = wrap.width = window.innerWidth
+            var height = wrap.height = window.innerHeight
+            var ctx = wrap.getContext("2d");
+            var btnCont = document.querySelector('.btn-control')
+            var btnPlay = btnCont.querySelector('button')
+            var el = document.getElementById('music');
+            var AudioContext = window.AudioContext || window.webkitAudioContext;
+            var context = AudioContext ? new AudioContext() : '';
+            //加载媒体
+            //var audio = new Audio('demo.mp3')
+            //audio.crossOrigin = "anonymous";
+            //创建节点
+            var source = context.createMediaElementSource(el);
+            var analyser = context.createAnalyser();
+            //连接：source → analyser → destination 
+            source.connect(analyser) //分析器
+            //创建数据
+            analyser.connect(context.destination);
+            var output = new Uint8Array(360);
+            var r = 200 //半径 
+            var rx = width / 2 //圆心x 坐标
+            var ry = height / 2 //圆心y 坐标
+            function drawSpectrum() {
+                analyser.getByteFrequencyData(output);//获取频域数据
+                ctx.clearRect(0, 0, wrap.width, wrap.height);
+                //画线条
+                //0度角坐标
+                for (var i = 0; i < 360; i++) {
+                    var value = output[i] / 8 //获取数据
+                    dx = Math.sin(i * (Math.PI / 180)) * (r + value) + rx
+                    dy = Math.cos(i * (Math.PI / 180)) * (r + value) + ry
+                    ctx.beginPath();
+                    ctx.arc(dx, dy, 1, 0, 2 * Math.PI);
+                    ctx.strokeStyle = '#fff'
+                    ctx.fillStyle = '#fff'
+                    ctx.fill()
+                    ctx.stroke();
+                }
+                requestAnimationFrame(drawSpectrum);
+            }
+            drawSpectrum()
+        }
+
+    </script>
+</body>
+
+</html>

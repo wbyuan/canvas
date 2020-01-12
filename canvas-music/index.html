@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>波浪线</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            border: 0;
+            box-sizing: border-box;
+            list-style: none;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: url(./image/325735.jpg)
+        }
+
+        .btn-control {
+            width: 200px;
+            height: 42px;
+            position: absolute;
+            left: 50%;
+            top: 30%;
+        }
+
+        .btn-control>button {
+            width: 80px;
+            height: 42px;
+            line-height: 42px;
+            text-align: center;
+            border-radius: 8px;
+            background: #ffffff;
+            color: red;
+            font-size: 18px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+
+<body>
+    <canvas id="canvas"></canvas>
+    <audio id="music" crossOrigin='anonymous' src="http://media.mizuiren.com/cz.mp3" controls></audio>
+    <!-- 
+    <div class="btn-control">
+        <button type="button" class="btn-play">播放</button>
+        <button type="button" class="btn-pause">暂停</button>
+    </div> -->
+    <script>
+        window.onload = function () {
+            var canvas = document.querySelector('#canvas')
+            var width = canvas.width = window.innerWidth
+            var height = canvas.height = window.innerHeight
+            var ctx = canvas.getContext('2d')
+
+            var my_gradient = ctx.createLinearGradient(0, height / 2, width, height / 2);
+            my_gradient.addColorStop("0", "magenta");
+            my_gradient.addColorStop("0.2", "red");
+            my_gradient.addColorStop("0.4", "yellow");
+            my_gradient.addColorStop("0.6", "green");
+            my_gradient.addColorStop("0.8", "blue");
+            my_gradient.addColorStop("1", "cyan");
+            var el = document.getElementById('music');
+            el.play()
+            var AudioContext = window.AudioContext || window.webkitAudioContext;
+            var context = AudioContext ? new AudioContext() : '';
+            //加载媒体
+            //var audio = new Audio('demo.mp3')
+            //audio.crossOrigin = "anonymous";
+            //创建节点
+            var source = context.createMediaElementSource(el);
+
+            var analyser = context.createAnalyser();
+            //连接：source → analyser → destination 
+            source.connect(analyser) //分析器
+            //创建数据
+            analyser.connect(context.destination);
+            var output = new Uint8Array(300);
+            var points = []
+            var pointW = 2
+            var pointGap = 20
+            var length = width / pointW + pointGap
+            function getPointData() {
+                analyser.getByteFrequencyData(output);//获取频域数据
+                for (var i = 0; i < length; i++) {
+                    let x = i * (pointW + pointGap)
+                    let y = output[i] + height / 2
+                    points.push([x, y])
+                }
+                // for (var i = 0; i < 15; i++) {
+
+                //     let y =  Math.random() *200
+                //     let a = Math.round(length * Math.random())
+                //     if (a < length - 1) {
+                //         points[a][1] = y
+                //     }
+
+                // }
+                // for (var i = 0; i < points.length; i++) {
+                //     //复制当前的坐标作为下一个点的坐标 形成等腰三角形
+                //     cloneArr[i][0] = points[i][0]
+                //     cloneArr[i][1] = points[i][1]
+                //     cloneArr[i + 1][0] = points[i][0] * 2
+                //     cloneArr[i + 1][1] = points[i][0]
+                //     //对比当前和下一个点的的Y坐标，以canvas / 2为分界线，
+                //     //如果当前点和下一个点在同一侧 把下一个点放到另一侧 或者删除
+                //     if ((points[i][1] < height) && (points[i + 1][1]) < height) {
+                //         points.splice(i + 1, 1)
+                //     }
+                //     if ((points[i][1] > height) && (points[i + 1][1]) > height) {
+                //         points.splice(i + 1, 1)
+                //     }
+
+                // }
+            }
+            function drawSpectrum() {
+                getPointData()
+                ctx.clearRect(0, 0, width, height);
+                ctx.beginPath()
+                ctx.moveTo(0, height / 2)
+                points.forEach((dot, index) => {
+                    if (length < points.length - 1) {
+                        if ((points[index][1] < height) && (points[index + 1][1]) < height) {
+                            return
+                        }
+                        if ((points[index][1] > height) && (points[index + 1][1]) > height) {
+                            return
+                        }
+                    }
+
+                    ctx.lineTo(dot[0], dot[1])
+                    ctx.strokeStyle = '#f60';
+                    ctx.stroke()
+                });
+
+                points.length = 0
+                requestAnimationFrame(drawSpectrum)
+            }
+            drawSpectrum()
+            // function drawLine(index) {
+            //     let x1 = points[index][0]
+            //     let y1 = points[index][1]
+            //     let x2 = points[index + 1][0]
+            //     let y2 = points[index + 1][1]
+            //     ctx.moveTo(x1, y1);
+            //     ctx.lineTo(x2, y2);
+            //     ctx.stroke();
+            // }
+            // var index = 0
+            // function drawing() {
+            //     getPointData()
+            //     if (index > points.length - 2) {
+            //         return
+            //     }
+            //     index++
+            //     ctx.strokeStyle = '#f60';
+            //     drawLine(index)
+            //     requestAnimationFrame(drawing)
+            //     points.length = 0
+            // }
+            // drawing()
+        }
+    </script>
+</body>
+
+</html>

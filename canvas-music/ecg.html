@@ -1,0 +1,97 @@
+w<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>模拟心电图</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <style>
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="canvas">
+        <canvas id="can">Canvas画板</canvas>
+    </div>
+
+    <script src="js/vue.min.js"></script>
+    <script>
+        var can = document.getElementById('can'),
+            pan,
+            index = 0,
+            flag = true,
+            wid = document.body.clientWidth,
+            hei = document.body.clientHeight,
+            x = 0,
+            y = hei / 2;
+        start();
+        function start() {
+            can.height = hei;
+            can.width = wid;
+            pan = can.getContext("2d");//获取2D图像API接口
+            pan.strokeStyle = "#08b95a";//设置画笔颜色
+            pan.lineJoin = "round";//设置画笔轨迹基于圆点拼接
+            pan.lineWidth = 9;//设置画笔粗细
+            pan.beginPath();
+            pan.moveTo(x, y);
+            index = setInterval(move, 1);
+        };
+        function move() {
+            x++;//x轴是始终运动的，所以x一直自增
+            if (x < 100) {
+                //前100px，我们不希望做垂直运动，让点只沿垂直方向运动即可，所以不做任何操作
+            } else {
+                if (x >= wid - 100) {
+                    //最后的100px，同样希望心电图只做水平运动，不会上下波动，所以不做任何操作
+                } else {
+                    //波峰和波谷的随机值z
+                    var z = Math.random() * 280;
+
+                    if (y <= z) {
+                        //画布的坐标是从左上角开始计算的，也就是最左上角的点的坐标是（0,0）,y是当前画笔所在坐标的y轴，假如y小于z，
+                        //就代表y已经到达波峰位置，准备开始向波谷运动
+                        flag = true
+                        
+                    }
+                    if ((hei - y) <= z) {
+                        //假如当前画笔在y轴的坐标y距离浏览器底部hei的差值已经小于随机值z，代表当前的画笔已经运行到波谷位置，准备转向波峰位置运动
+                        flag = false
+                    }
+                    if (flag) {
+                        //假如flag为true，代表画笔仍然向波谷位置前进，需要花点功夫理解的是，因为画布左上角的点的坐标是（0,0），
+                        //所以y的值越大，画笔在y轴的位置越靠近浏览器底部，所以向波谷运动时，y的值是不断增加的，同时为了让波峰波谷更陡峭，我这里设置y += 5
+                        y += 5
+                    } else {
+                        //假如flag为false，表示向波峰运动，y的值是不断减小的
+                        y -= 5
+                    }
+                }
+            }
+            if (x == wid) {
+                //当画笔运动到浏览器右侧边缘，停止绘图
+                pan.closePath();
+                //清除循环
+                clearInterval(index);
+                //将index置零，准备下一次循环
+                index = 0;
+                //重新定位画笔到屏幕左侧上下居中的位置
+                x = 0;
+                y = hei / 2;
+                flag = true;
+                //重新进行下一次心电图的绘制
+                start();
+            }
+            //lineTo和stroke函数负责描绘运动轨迹
+            pan.lineTo(x, y);
+            pan.stroke();
+        }
+    </script>
+</body>
+
+</html>

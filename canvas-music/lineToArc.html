@@ -1,0 +1,70 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Canvas使用线条绘制圆</title>
+</head>
+
+<body>
+    <canvas style="background: #000;" id="canvas" width="500" height="500"></canvas>
+    <script>
+        var canvas = document.getElementById('canvas')
+        var width = canvas.width = window.innerWidth
+        var height = canvas.height = window.innerHeight
+        var ctx = canvas.getContext('2d');//生成画笔对象
+        var start = -90, end = -90;//起止点
+        var r = 100 //半径 
+        var rx = width / 2 //圆心x 坐标
+        var ry = height / 2 //圆心y 坐标
+
+        var arr = []
+        var my_gradient = ctx.createLinearGradient(0, height / 2, width, height / 2);
+        my_gradient.addColorStop("0", "magenta");
+        my_gradient.addColorStop("0.2", "red");
+        my_gradient.addColorStop("0.4", "yellow");
+        my_gradient.addColorStop("0.6", "green");
+        my_gradient.addColorStop("0.8", "blue");
+        my_gradient.addColorStop("1", "cyan");
+
+        var dx, dy;
+        ctx.beginPath();
+        ctx.moveTo(Math.sin(end * (Math.PI / 180)) * r + rx,  Math.cos(end * (Math.PI / 180)) * r + ry);
+        var timer = setInterval(function () {
+            //ctx.clearRect(0, 0, width, height);//清除画布已有内容
+            end += 3;
+            //绘制圆弧
+            //0度角坐标
+            dx = Math.sin(end * (Math.PI / 180)) * r + rx
+            dy = Math.cos(end * (Math.PI / 180)) * r + ry
+            //
+           
+            ctx.lineWidth = 2;
+            ctx.lineTo(dx, dy);
+            ctx.strokeStyle = 'red'
+            //ctx.arc(dx, dy, 3, 0, 2 * Math.PI);
+            ctx.fillStyle = "red";
+            //ctx.fill();
+            ctx.stroke();
+            if (end >= 270) {
+                clearInterval(timer);
+            }
+        }, 200)
+        /*
+        for (var i = 0; i < 360; i++) {
+            dx = Math.sin(i * (Math.PI / 180)) * r + rx
+            dy = Math.cos(i * (Math.PI / 180)) * r + ry
+            ctx.beginPath();
+            ctx.moveTo(dx, dy);
+            ctx.lineWidth = 2;
+            ctx.lineTo(dx + 1, dy + 1);
+            ctx.strokeStyle = 'red'
+            //ctx.arc(dx, dy, 3, 0, 2 * Math.PI);
+            ctx.fillStyle = "red";
+            ctx.fill();
+            ctx.stroke();
+        }*/
+    </script>
+</body>
+
+</html>

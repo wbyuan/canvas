@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+
+<body>
+    <script>
+        var f = []
+        function p() {
+            this.r = 5
+            this.n = []
+        }
+        p.prototype.init = function () {
+            for (var i = 0; i < 5; i++) {
+                var w = new fl()
+                this.n.push(w)
+            }
+        }
+        function fl(){
+            this.s = Math.random()
+            this.h = 100
+        }
+        fl.prototype.add = function () {
+            console.log(this.s)
+        }
+        function dd() {
+            for (var i = 0; i < 5; i++) {
+                var ff = new p()
+                f.push(ff)
+            }
+            f.forEach(element => {
+                element.init()
+                element.n.forEach(l => {
+                   l.add() 
+                });
+            });
+        }
+        dd()
+    </script>
+</body>
+
+</html>

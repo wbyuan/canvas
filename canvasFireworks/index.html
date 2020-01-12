@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>烟火</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            border: 0;
+            overflow: hidden;
+        }
+
+        .city {
+            width: 100%;
+            position: fixed;
+            bottom: 0px;
+            z-index: 100;
+        }
+
+        .city img {
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="canvas" style="background: #000000"></canvas>
+    <div class="city">
+        <img src="city.png" alt="" />
+    </div>
+</body>
+<script src="js/raf.js"></script>
+<script>
+    window.onload = function () {
+        var canvas = document.getElementById("canvas")
+        var context = canvas.getContext('2d')
+        canvas.width = window.innerWidth
+        canvas.height = window.innerHeight
+        var shells = []
+        function getRandom(a, b) {
+            return Math.random() * (b - a) + a
+        }
+        function Shell() {
+            this.x = parseInt(getRandom(canvas.width / 3, canvas.width * 2 / 3))
+            this.y = parseInt(canvas.height)
+            this.vx = parseInt(getRandom(canvas.width / 5, canvas.width * 4 / 5))
+            this.vy = parseInt(getRandom(canvas.height / 5, canvas.height * 3 / 5))
+            this.r = 2
+            this.c = "#fff"
+            this.sc = "rgba(255,228,150,0.3)"
+            this.end = false
+            this.flames = [] // 烟火
+            this.ba = parseInt(getRandom(80, 200));
+        }
+        Shell.prototype.init = function () {
+            context.save()
+            context.beginPath()
+            context.arc(this.x, this.y, this.r, 0, 2 * Math.PI)
+            context.fillStyle = this.c
+            //context.shadowBlur = 5
+            //context.shadowColor = this.sc
+            context.fill()
+            context.beginPath()
+            context.arc(this.x, this.y, this.r + 3 * Math.random() + 1, 0, 2 * Math.PI)
+            context.fillStyle = this.sc
+            context.fill()
+            context.restore()
+        }
+        Shell.prototype.move = function () {
+            var dx = this.vx - this.x
+            var dy = this.vy - this.y
+            this.x = this.x + 0.01 * dx
+            this.y = this.y + 0.01 * dy
+            this.init()
+            if (Math.abs(dx) <= this.ba && Math.abs(dy) <= this.ba) {
+                this.end = true
+                this.initFlame() // 生成烟火
+            }
+        }
+        Shell.prototype.initFlame = function () {
+            //x = cos * r ; y = sin * r
+            var num = getRandom(100, 300) //碎片数量和最大范围
+            for (var i = 0; i < num; i++) {
+                var angle = Math.random() * Math.PI * 2 //角度取 0 ~ 360 度的随机一个方向
+                var dx = Math.cos(angle) * getRandom(0, num) + this.x
+                var dy = Math.sin(angle) * getRandom(0, num) + this.y
+                var flame = new Flame(this.x, this.y, dx, dy)
+                this.flames.push(flame)
+            }
+        }
+
+        //烟火
+        function Flame(cx, cy, xx, yy) {
+            this.x = cx //中心点x坐标
+            this.y = cy //中心点y坐标
+            this.xx = xx //终点x坐标
+            this.yy = yy //终点y坐标
+            this.r = getRandom(0, 2)  //矩形的宽高
+            this.end = false
+            //获取128 到255 之间的颜色
+            this.color = {
+                a: parseInt(getRandom(128, 255)),
+                b: parseInt(getRandom(128, 255)),
+                c: parseInt(getRandom(128, 255))
+            }
+        }
+        Flame.prototype.init = function () {
+            context.fillStyle = "rgba(" + this.color.a + "," + this.color.b + "," + this.color.c + ",1)";
+            context.fillRect(this.x - this.r, this.y - this.r, this.r * 2, this.r * 2)
+        }
+        Flame.prototype.moveTo = function () {
+            this.yy = this.yy + 0.2
+            var dx = this.xx - this.x
+            var dy = this.yy - this.y
+            this.x += dx * 0.01
+            this.y += dy * 0.01
+            if (dx === 0 && Math.abs(dy) <= 80) {
+                this.end = true;
+            }
+            this.init();
+        }
+        function initAnimate() {
+
+            for (var i = 0; i < 10; i++) {
+                var shell = new Shell()
+                shells.push(shell)
+            }
+            /*
+            setInterval(() => {
+                var shell = new Shell()
+                if (!shell.end) {
+                    shells.push(shell)
+                }
+
+            }, 1000);
+            */
+            animate()
+        }
+        function animate() {
+            context.save()
+            context.globalCompositeOperation = 'destination-out'
+            context.globalAlpha = 0.1
+            //对整个画布进行清除 
+            context.fillRect(0, 0, canvas.width, canvas.height)
+            context.restore()
+
+            shells.forEach(ele => {
+                if (!ele.end) {
+                    ele.move()
+                }
+                if (ele.end) {
+                    ele.flames.forEach(f => {
+                        if (!f.end) {
+                            f.moveTo()
+                        }
+                        if (f.end) {
+                            shells.splice(shells.indexOf(this), 1)
+                            ele.flames.splice(ele.flames.indexOf(this), 1)
+                        }
+                    });
+                }
+            });
+            requestAnimationFrame(animate)
+        }
+        initAnimate()
+    }
+</script>
+
+</html>

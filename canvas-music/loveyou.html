@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>canvas 画心</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            border: 0;
+            box-sizing: border-box;
+            list-style: none;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #000;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="canvas"></canvas>
+    <script>
+
+        window.addEventListener('load', function () {
+            var canvas = document.querySelector('#canvas')
+            var width = canvas.width = window.innerWidth
+            var height = canvas.height = window.innerHeight
+            var ctx = canvas.getContext("2d")
+            var my_gradient = ctx.createLinearGradient(0, height / 2, width, height / 2);
+            my_gradient.addColorStop("0", "magenta");
+            my_gradient.addColorStop("0.2", "red");
+            my_gradient.addColorStop("0.4", "yellow");
+            my_gradient.addColorStop("0.6", "green");
+            my_gradient.addColorStop("0.8", "blue");
+            my_gradient.addColorStop("1", "cyan");
+            ctx.translate(width / 2, height / 2);
+            var pointArr = []  //保存所有坐标点的数组
+            var index = 0;
+            function heartArr() {
+                // t 代表弧度
+                var t = -Math.PI + 0.5;
+                // t的最大值
+                var maxt = 2 * Math.PI - 1;
+                // vt 代表t的增量
+                var vt = 0.1;
+                // 需要循环的次数
+                var maxi = Math.ceil(maxt / vt);
+                // x 用来暂时保存每次循环得到的 x 坐标
+                var x = 0;
+                // y 用来暂时保存每次循环得到的 y 坐标
+                var y = 0;
+                // 控制心形大小
+                var size = 10;
+                for (var i = 0; i <= maxi; i++) {
+                    x = 16 * Math.pow(Math.sin(t), 3);
+                    y = 13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t);
+                    t += vt;
+                    pointArr.push([x * size, -y * size]);
+                }
+            }
+
+            function drawLine(index) {
+                let x1 = pointArr[index][0]
+                let y1 = pointArr[index][1]
+                let x2 = pointArr[index + 1][0];
+                let y2 = pointArr[index + 1][1];
+                ctx.beginPath();
+                ctx.moveTo(x1, y1)
+                ctx.lineTo(x2, y2)
+                ctx.lineJoin = "round";
+                ctx.lineCap = "round";
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = 'red';
+                ctx.strokeStyle =  "magenta"
+                ctx.stroke()
+            }
+
+            function drawing() {
+                heartArr()
+                drawLine(index)
+                if (index > pointArr.length - 1) {
+                    return
+                }
+                index++
+                requestAnimationFrame(drawing);
+            }
+            drawing()
+        })
+    </script>
+</body>
+
+</html>
